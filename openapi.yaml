@@ -1,0 +1,685 @@
+openapi: 3.1.0
+info:
+  title: Habibi Stay API
+  description: API for managing properties, bookings, and channel management in Habibi Stay
+  version: 1.0.0
+  contact:
+    name: Habibi Stay Support
+    email: support@habibistay.com
+
+servers:
+  - url: /api
+    description: API endpoint
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    ValidationError:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "The given data was invalid."
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+        from:
+          type: integer
+        last_page:
+          type: integer
+        path:
+          type: string
+        per_page:
+          type: integer
+        to:
+          type: integer
+        total:
+          type: integer
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 3
+          maxLength: 255
+        description:
+          type: string
+          maxLength: 5000
+        type:
+          type: string
+          enum: [apartment, villa, chalet, hotel_room]
+        location:
+          type: string
+          maxLength: 255
+        price_per_night:
+          type: number
+          format: float
+          minimum: 0
+        cleaning_fee:
+          type: number
+          format: float
+          minimum: 0
+        service_fee:
+          type: number
+          format: float
+          minimum: 0
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+        available_dates:
+          type: array
+          items:
+            type: string
+            format: date
+        blocked_dates:
+          type: array
+          items:
+            type: string
+            format: date
+        minimum_stay:
+          type: integer
+          minimum: 1
+        maximum_stay:
+          type: integer
+          minimum: 1
+        is_featured:
+          type: boolean
+        verification_status:
+          type: string
+          enum: [pending, verified, rejected]
+        user_id:
+          type: integer
+          format: int64
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - name
+        - type
+        - location
+        - price_per_night
+
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        property_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        check_in:
+          type: string
+          format: date
+        check_out:
+          type: string
+          format: date
+        guests:
+          type: integer
+          minimum: 1
+        total_price:
+          type: number
+          format: float
+          minimum: 0
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled, failed]
+        payment_id:
+          type: string
+        payment_url:
+          type: string
+        refund_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - property_id
+        - check_in
+        - check_out
+        - guests
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        property_id:
+          type: integer
+          format: int64
+        user_id:
+          type: integer
+          format: int64
+        booking_id:
+          type: integer
+          format: int64
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          maxLength: 1000
+        cleanliness_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        communication_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        check_in_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        accuracy_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        location_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        value_rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - rating
+        - comment
+        - cleanliness_rating
+        - communication_rating
+        - check_in_rating
+        - accuracy_rating
+        - location_rating
+        - value_rating
+
+paths:
+  /properties:
+    get:
+      summary: List properties
+      description: Get a paginated list of properties
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 15
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [price_asc, price_desc, rating_desc, created_desc]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+    post:
+      summary: Create property
+      description: Create a new property
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '201':
+          description: Property created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /properties/search:
+    get:
+      summary: Search properties
+      description: Search properties with filters
+      parameters:
+        - name: location
+          in: query
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [apartment, villa, chalet, hotel_room]
+        - name: price_min
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: price_max
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: check_in
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: check_out
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: guests
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Property'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /properties/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      summary: Get property
+      description: Get property details
+      responses:
+        '200':
+          description: Property details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    put:
+      summary: Update property
+      description: Update property details
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Property'
+      responses:
+        '200':
+          description: Property updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Property'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+    delete:
+      summary: Delete property
+      description: Delete a property
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Property deleted
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bookings:
+    get:
+      summary: List bookings
+      description: Get user's bookings
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, confirmed, cancelled, failed]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: List of bookings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Booking'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /bookings/{property_id}:
+    post:
+      summary: Create booking
+      description: Create a new booking
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: property_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                check_in:
+                  type: string
+                  format: date
+                check_out:
+                  type: string
+                  format: date
+                guests:
+                  type: integer
+                  minimum: 1
+              required:
+                - check_in
+                - check_out
+                - guests
+      responses:
+        '201':
+          description: Booking created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /reviews/property/{property_id}:
+    get:
+      summary: Get property reviews
+      description: Get reviews for a property
+      parameters:
+        - name: property_id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: sort
+          in: query
+          schema:
+            type: string
+            enum: [rating_desc, rating_asc, date_desc, date_asc]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Review'
+                  meta:
+                    $ref: '#/components/schemas/PaginationMeta'
+        '404':
+          description: Property not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /channel-manager/calendar:
+    get:
+      summary: Get calendar data
+      description: Get calendar data for properties
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Calendar data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        name:
+                          type: string
+                        bookings:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: integer
+                              start:
+                                type: string
+                                format: date
+                              end:
+                                type: string
+                                format: date
+                              title:
+                                type: string
+                              status:
+                                type: string
+                        prices:
+                          type: object
+                          properties:
+                            base_price:
+                              type: number
+                            seasonal_prices:
+                              type: array
+                              items:
+                                type: object
+                            special_prices:
+                              type: array
+                              items:
+                                type: object
+                        availability:
+                          type: array
+                          items:
+                            type: string
+                            format: date
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError' 
