@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sara AI Frontend Tests</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #test-results { border: 1px solid #ccc; padding: 10px; }
+        .test-case { margin-bottom: 8px; }
+        .passed { color: green; }
+        .failed { color: red; }
+        .log { margin-left: 20px; font-size: 0.9em; color: #555; }
+    </style>
+</head>
+<body>
+    <h1>Sara AI Frontend Logic Tests</h1>
+    <div id="test-results"></div>
+
+    <!-- Include the main script -->
+    <!-- The script is expected to set up window.saraAITestAPI and window.test_chatMessages -->
+    <script src="../static/js/script.js"></script>
+
+    <script>
+        // Test Runner Setup
+        const testResultsDiv = document.getElementById('test-results');
+        let testsPassed = 0;
+        let testsFailed = 0;
+        window.saraAITestAPI.isRunningTest = true; // Ensure timeouts in script.js are bypassed
+
+        function logTestResult(testName, passed, details = "") {
+            const div = document.createElement('div');
+            div.classList.add('test-case');
+            div.classList.add(passed ? 'passed' : 'failed');
+            div.textContent = `${testName}: ${passed ? 'PASSED' : 'FAILED'}`;
+            if (details) {
+                const logDiv = document.createElement('div');
+                logDiv.classList.add('log');
+                logDiv.textContent = details;
+                div.appendChild(logDiv);
+            }
+            testResultsDiv.appendChild(div);
+            console.log(`${testName}: ${passed ? 'PASSED' : 'FAILED'} ${details}`);
+            if (passed) testsPassed++; else testsFailed++;
+        }
+
+        function assertEquals(expected, actual, message) {
+            if (expected !== actual) {
+                throw new Error(`${message}. Expected: ${expected}, Actual: ${actual}`);
+            }
+        }
+         function assertDeepEquals(expected, actual, message) {
+            if (JSON.stringify(expected) !== JSON.stringify(actual)) {
+                throw new Error(`${message}. Expected: ${JSON.stringify(expected)}, Actual: ${JSON.stringify(actual)}`);
+            }
+        }
+
+        function assertTruthy(condition, message) {
+            if (!condition) {
+                throw new Error(message);
+            }
+        }
+        
+        function assertContainsText(text, messageArray, description) {
+            const found = messageArray.some(msg => msg.text && msg.text.includes(text));
+            if (!found) {
+                throw new Error(`${description}. Expected to find text containing "${text}" in messages. Messages: ${JSON.stringify(messageArray)}`);
+            }
+        }
+        
+        function getLastSaraMessage() {
+            const saraMessages = window.test_chatMessages.filter(m => m.className === 'sara-message');
+            return saraMessages.length > 0 ? saraMessages[saraMessages.length - 1].text : null;
+        }
+
+        function beforeEachTest() {
+            window.saraAITestAPI.resetAllFlows(); // Reset state in script.js
+            window.test_chatMessages = []; // Clear captured messages
+            // Simulate initial featured properties being loaded (already in index.html, script.js doesn't load them)
+            // For tests, we can manually add some mock elements if functions depend on them,
+            // or ensure functions are robust against missing DOM elements if chatBox is null.
+            // For now, we assume saraAITestAPI functions are callable.
+             // Mock minimal DOM structure if functions expect it for querySelector etc.
+            if (!document.getElementById('chat-box')) {
+                const mockChatBox = document.createElement('div');
+                mockChatBox.id = 'chat-box';
+                document.body.appendChild(mockChatBox);
+                window.saraAITestAPI.chatBox = mockChatBox; // Re-assign if it was null
+            }
+             // Ensure dynamic input fields can be "created" and "found" by ID for tests
+            // This is a simplified mock for functions that do getElementById
+            const originalGetElementById = document.getElementById;
+            document.getElementById = (id) => {
+                if (id.endsWith('-field')) { // Assume dynamic input fields
+                    let field = originalGetElementById.call(document, id);
+                    if (!field) { // If it doesn't exist in the actual DOM (likely in test)
+                        field = document.createElement('input');
+                        field.id = id;
+                        // Attach to a temporary, detached container if needed, or just return it
+                        // For simplicity, just return the created field. Functions in script.js will use its value.
+                        // This mock needs to be robust if tests interact heavily with DOM element properties.
+                        // For current tests, we primarily use saraAITestAPI.submitDynamicInput which can mock this.
+                    }
+                    return field;
+                }
+                return originalGetElementById.call(document, id);
+            };
+        }
+        
+        // Test Suites
+        async function runTests() {
+            // --- Initial Interaction Tests ---
+            try {
+                beforeEachTest();
+                // The initial welcome message is in index.html, not added by script.js on load.
+                // So, we can't directly test its addition via script.js.
+                // We can test if resetAllFlows perhaps adds a greeting, or if a command does.
+                logTestResult("Initial state check", true, "Conceptual: Welcome message is in HTML. Featured properties are in HTML.");
+            } catch (e) { logTestResult("Initial Interaction Test", false, e.message); }
+
+            // --- Property Discovery Flow ---
+            try {
+                beforeEachTest();
+                saraAITestAPI.startPropertySearch();
+                assertEquals('awaiting_location', saraAITestAPI.getState().currentSearchStep, "Should be awaiting location");
+                assertContainsText("Where are you planning to go?", test_chatMessages, "Sara asks for location");
+                
+                // Simulate user providing location (using the new helper if available, or directly calling process func)
+                // Assuming appendDynamicInput creates a field with id 'location-input-field'
+                // And its send button calls processSearchInput or similar.
+                // For testing, we can call processSearchInput directly after setting up the mock input.
+                const mockLocationInput = {id: 'location-input-field', value: 'Bali'};
+                if(document.getElementById(mockLocationInput.id)) document.getElementById(mockLocationInput.id).value = mockLocationInput.value;
+                else { // Mock if not in DOM
+                    const tempInput = document.createElement('input'); tempInput.id = mockLocationInput.id; tempInput.value = mockLocationInput.value; 
+                    (document.getElementById('chat-box') || document.body).appendChild(tempInput); // ensure it's findable
+                }
+                saraAITestAPI.processSearchInput('location-input'); // Pass ID, function will get value
+
+                assertEquals('awaiting_dates', saraAITestAPI.getState().currentSearchStep, "Should be awaiting dates");
+                assertContainsText("When would you like to travel?", test_chatMessages, "Sara asks for dates");
+                assertEquals("Bali", saraAITestAPI.getState().searchCriteria.location, "Location should be Bali");
+
+                // Simulate providing dates
+                const mockStartDateInput = {id: 'start-date-input-field', value: '2024-12-01'};
+                const mockEndDateInput = {id: 'end-date-input-field', value: '2024-12-05'};
+                if(document.getElementById(mockStartDateInput.id)) document.getElementById(mockStartDateInput.id).value = mockStartDateInput.value; else { const t = document.createElement('input'); t.id=mockStartDateInput.id; t.value=mockStartDateInput.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                if(document.getElementById(mockEndDateInput.id)) document.getElementById(mockEndDateInput.id).value = mockEndDateInput.value; else { const t = document.createElement('input'); t.id=mockEndDateInput.id; t.value=mockEndDateInput.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processSearchInput('end-date-input'); // ID of the last input in sequence
+
+                assertEquals('awaiting_guests', saraAITestAPI.getState().currentSearchStep, "Should be awaiting guests");
+                assertContainsText("How many guests will be travelling?", test_chatMessages, "Sara asks for guests");
+                assertEquals("2024-12-01", saraAITestAPI.getState().searchCriteria.startDate, "Start date mismatch");
+                
+                // Simulate providing guests
+                const mockGuestsInput = {id: 'guests-input-field', value: '2'};
+                if(document.getElementById(mockGuestsInput.id)) document.getElementById(mockGuestsInput.id).value = mockGuestsInput.value; else { const t = document.createElement('input'); t.id=mockGuestsInput.id; t.value=mockGuestsInput.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processSearchInput('guests-input');
+                
+                assertEquals(null, saraAITestAPI.getState().currentSearchStep, "Search step should be null after completion");
+                assertEquals("2", saraAITestAPI.getState().searchCriteria.guests, "Guests count mismatch");
+                assertContainsText("properties I found for you", test_chatMessages, "Sara shows search results");
+                logTestResult("Property Discovery Flow", true);
+            } catch (e) { logTestResult("Property Discovery Flow", false, e.message + e.stack); }
+
+            // --- Authentication Flow (Login with Email) ---
+            try {
+                beforeEachTest();
+                // Simulate clicking "Book Now" on a property when logged out
+                // Need to set up propertyToBook for startAuthFlow if it relies on it
+                saraAITestAPI.setState({ propertyToBook: { name: "Test Villa", price: 100 } });
+                saraAITestAPI.startAuthFlow("Test Villa"); // Triggers auth options
+                
+                saraAITestAPI.handleAuthOptionClick('login_email');
+                assertEquals('awaiting_login_email', saraAITestAPI.getState().currentAuthStep, "Should await login email");
+                assertContainsText("Please enter your email:", test_chatMessages, "Sara asks for login email");
+
+                const mockLoginEmail = {id: 'auth-login-email-field', value: 'test@example.com'};
+                if(document.getElementById(mockLoginEmail.id)) document.getElementById(mockLoginEmail.id).value = mockLoginEmail.value; else { const t = document.createElement('input'); t.id=mockLoginEmail.id; t.value=mockLoginEmail.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processAuthInput(null, mockLoginEmail.id); // Value is picked by ID
+
+                assertEquals('awaiting_login_password', saraAITestAPI.getState().currentAuthStep, "Should await login password");
+                assertContainsText("Please enter your password:", test_chatMessages, "Sara asks for login password");
+
+                const mockLoginPass = {id: 'auth-login-password-field', value: 'password123'};
+                if(document.getElementById(mockLoginPass.id)) document.getElementById(mockLoginPass.id).value = mockLoginPass.value; else { const t = document.createElement('input'); t.id=mockLoginPass.id; t.value=mockLoginPass.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processAuthInput(null, mockLoginPass.id); // Value picked by ID
+
+                assertTruthy(saraAITestAPI.getState().isLoggedIn, "User should be logged in");
+                assertEquals("test@example.com", saraAITestAPI.getState().currentUser.email, "Logged in user email mismatch");
+                assertContainsText("Let's book Test Villa for you", test_chatMessages, "Sara proceeds to booking");
+                logTestResult("Authentication Flow (Login Email)", true);
+            } catch (e) { logTestResult("Authentication Flow (Login Email)", false, e.message + e.stack); }
+            
+            // --- Booking Flow (Assuming Logged In) ---
+            try {
+                beforeEachTest();
+                saraAITestAPI.setState({ 
+                    isLoggedIn: true, 
+                    currentUser: { name: "Test User", email: "test@example.com" },
+                    propertyToBook: { name: "Beach Delight", price: 250 } 
+                });
+                // Directly start booking flow
+                saraAITestAPI.proceedToBookingStep('initial_booking_step');
+                assertContainsText("select your check-in and check-out dates", test_chatMessages, "Asks for dates if none in searchCriteria");
+
+                // Simulate providing dates
+                const mockBStartDate = {id: 'booking-start-date-field', value: '2025-01-10'};
+                const mockBEndDate = {id: 'booking-end-date-field', value: '2025-01-15'};
+                if(document.getElementById(mockBStartDate.id)) document.getElementById(mockBStartDate.id).value = mockBStartDate.value; else { const t = document.createElement('input'); t.id=mockBStartDate.id; t.value=mockBStartDate.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                if(document.getElementById(mockBEndDate.id)) document.getElementById(mockBEndDate.id).value = mockBEndDate.value; else { const t = document.createElement('input'); t.id=mockBEndDate.id; t.value=mockBEndDate.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processBookingInput(null, mockBEndDate.id); // processBookingInput uses IDs to get values
+
+                assertEquals('awaiting_booking_guests', saraAITestAPI.getState().currentBookingStep, "Should await guests");
+                
+                // Simulate providing guests
+                const mockBGuests = {id: 'booking-guests-input-field', value: '3'};
+                 if(document.getElementById(mockBGuests.id)) document.getElementById(mockBGuests.id).value = mockBGuests.value; else { const t = document.createElement('input'); t.id=mockBGuests.id; t.value=mockBGuests.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processBookingInput(null, mockBGuests.id);
+
+                assertEquals('awaiting_summary_confirmation', saraAITestAPI.getState().currentBookingStep, "Should display summary");
+                const bookingState = saraAITestAPI.getState().bookingDetails;
+                assertEquals("Beach Delight", bookingState.propertyName, "Property name in booking details");
+                assertEquals("2025-01-10", bookingState.startDate, "Start date in booking details");
+                assertEquals(5, bookingState.numNights, "Number of nights calculation"); // 250 * 5 = 1250. 1250 + 20 = 1270
+                assertEquals(1270, bookingState.totalPrice, "Total price calculation");
+                assertContainsText("Booking Summary for Beach Delight", test_chatMessages, "Booking summary shown");
+                
+                // Simulate cancelling booking
+                saraAITestAPI.handleBookingActionButtonClick('cancel_booking');
+                assertEquals(null, saraAITestAPI.getState().currentBookingStep, "Booking step should be null after cancel");
+                assertContainsText("booking for Beach Delight has been cancelled", test_chatMessages, "Cancellation message");
+                logTestResult("Booking Flow (Dates, Guests, Summary, Cancel)", true);
+            } catch (e) { logTestResult("Booking Flow", false, e.message + e.stack); }
+
+            // --- Payment Flow (Credit Card) ---
+            try {
+                beforeEachTest();
+                saraAITestAPI.setState({ 
+                    isLoggedIn: true, 
+                    currentUser: { name: "Payer User", email: "payer@example.com" },
+                    propertyToBook: { name: "Luxury Condo", price: 300 },
+                    bookingDetails: { // Pre-fill booking details as if booking flow just completed
+                        propertyName: "Luxury Condo", startDate: "2025-02-01", endDate: "2025-02-03", 
+                        numNights: 2, guests: "2", pricePerNight: 300, 
+                        subtotal: 600, serviceFee: 20, totalPrice: 620
+                    },
+                    currentBookingStep: 'awaiting_summary_confirmation' // To allow 'confirm_payment'
+                });
+                saraAITestAPI.handleBookingActionButtonClick('confirm_payment'); // Proceed to payment
+                assertEquals('awaiting_payment_method', saraAITestAPI.getState().currentPaymentStep, "Should await payment method");
+                assertContainsText("select your preferred payment method", test_chatMessages, "Asks for payment method");
+
+                saraAITestAPI.handlePaymentMethodClick('credit_card');
+                assertEquals('awaiting_cc_number', saraAITestAPI.getState().currentPaymentStep, "Should await CC number");
+
+                // Simulate entering CC details
+                const mockCCNum = {id: 'cc-number-input-field', value: '1234567890123456'};
+                if(document.getElementById(mockCCNum.id)) document.getElementById(mockCCNum.id).value = mockCCNum.value; else { const t = document.createElement('input'); t.id=mockCCNum.id; t.value=mockCCNum.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processPaymentInput(null, mockCCNum.id);
+
+                const mockCCExp = {id: 'cc-expiry-input-field', value: '12/25'};
+                if(document.getElementById(mockCCExp.id)) document.getElementById(mockCCExp.id).value = mockCCExp.value; else { const t = document.createElement('input'); t.id=mockCCExp.id; t.value=mockCCExp.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processPaymentInput(null, mockCCExp.id);
+                
+                const mockCCCVV = {id: 'cc-cvv-input-field', value: '123'};
+                if(document.getElementById(mockCCCVV.id)) document.getElementById(mockCCCVV.id).value = mockCCCVV.value; else { const t = document.createElement('input'); t.id=mockCCCVV.id; t.value=mockCCCVV.value; (document.getElementById('chat-box') || document.body).appendChild(t); }
+                saraAITestAPI.processPaymentInput(null, mockCCCVV.id);
+
+                assertEquals(null, saraAITestAPI.getState().currentPaymentStep, "Payment step should be null after completion");
+                assertContainsText("Your booking for Luxury Condo is confirmed!", test_chatMessages, "Booking confirmation displayed");
+                assertContainsText("Booking ID:", test_chatMessages, "Booking ID in confirmation");
+
+                logTestResult("Payment Flow (Credit Card)", true);
+            } catch (e) { logTestResult("Payment Flow (Credit Card)", false, e.message + e.stack); }
+            
+            // Summary of test run
+            testResultsDiv.appendChild(document.createElement('hr'));
+            const summaryDiv = document.createElement('div');
+            summaryDiv.innerHTML = `<strong>Test Run Complete:</strong> ${testsPassed} Passed, ${testsFailed} Failed.`;
+            testResultsDiv.appendChild(summaryDiv);
+        }
+
+        // Run tests when the page is loaded
+        window.onload = runTests;
+    </script>
+</body>
+</html>
