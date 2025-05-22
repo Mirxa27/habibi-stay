@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sara AI Assistant</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Sara AI Assistant</h2>
+        </div>
+        <div class="chat-box" id="chat-box">
+            <div class="message sara-message">
+                <p>Hi! I'm Sara, your personal travel assistant. Let me show you some amazing places you might love!</p>
+            </div>
+            <div class="featured-properties">
+                <h3>Admin Featured Properties</h3>
+                <div class="property">
+                    <img src="https://via.placeholder.com/300x200" alt="Property Image">
+                    <h4>Beachfront Villa in Bali</h4>
+                    <p>Bali, Indonesia</p>
+                    <p class="price">$200/night</p>
+                    <p class="rating">4.5 stars</p>
+                    <p class="amenities">Pool, Wi-Fi, Kitchen</p>
+                    <div class="property-buttons">
+                        <button>View Details</button>
+                        <button>Book Now</button>
+                    </div>
+                </div>
+                <div class="property">
+                    <img src="https://via.placeholder.com/300x200" alt="Property Image">
+                    <h4>Cozy Cabin in Aspen</h4>
+                    <p>Aspen, Colorado</p>
+                    <p class="price">$150/night</p>
+                    <p class="rating">4.8 stars</p>
+                    <p class="amenities">Fireplace, Hot Tub, Ski-in/Ski-out</p>
+                    <div class="property-buttons">
+                        <button>View Details</button>
+                        <button>Book Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <div class="navigation-buttons">
+                <button>Search Other Properties</button>
+                <button>Tell Me More About These</button>
+                <button>I Need Help</button>
+            </div>
+            <div>
+                <input type="text" id="user-input" placeholder="Type your message here...">
+                <button id="send-button">Send</button>
+            </div>
+            <div class="voice-input-container" style="margin-top: 10px;">
+                <input type="text" id="voice-input" placeholder="Simulate voice command (e.g., 'search Bali')">
+                <button id="send-voice-button">Send Voice</button>
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

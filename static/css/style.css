@@ -1,0 +1,358 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.chat-container {
+    width: 400px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    background-color: #2957c3;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+}
+
+.chat-header h2 {
+    margin: 0;
+    font-size: 1.2em;
+}
+
+.chat-box {
+    padding: 15px;
+    height: 400px;
+    overflow-y: auto;
+    border-bottom: 1px solid #eee;
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.sara-message {
+    background-color: #e1e1e1;
+    text-align: left;
+}
+
+.user-message {
+    background-color: #2957c3;
+    color: #fff;
+    text-align: right;
+}
+
+.featured-properties {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.featured-properties h3 {
+    font-size: 1em;
+    color: #333;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.property {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+    background-color: #f9f9f9;
+}
+
+.property img {
+    width: 100%;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.property h4 {
+    margin: 0 0 5px 0;
+    font-size: 0.9em;
+    color: #2957c3;
+}
+
+.property p {
+    margin: 3px 0;
+    font-size: 0.8em;
+    color: #555;
+}
+
+.property .price {
+    font-weight: bold;
+    color: #333;
+}
+
+.property .rating {
+    color: #e8a800; /* Gold color for stars */
+}
+
+.property .amenities {
+    font-style: italic;
+}
+
+.property-buttons {
+    margin-top: 10px;
+    text-align: right;
+}
+
+.property-buttons button {
+    background-color: #2957c3;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.8em;
+    margin-left: 5px;
+}
+
+.property-buttons button:hover {
+    background-color: #1f45a0;
+}
+
+.chat-input {
+    display: flex;
+    flex-direction: column;
+    padding: 15px;
+    border-top: 1px solid #eee;
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+}
+
+.navigation-buttons button {
+    background-color: #2957c3;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-grow: 1;
+    margin: 0 5px;
+    font-size: 0.9em;
+}
+
+.navigation-buttons button:hover {
+    background-color: #1f45a0;
+}
+
+/* Styling for the main chat input area and the voice input area */
+.chat-input > div { /* Direct div children of .chat-input */
+    display: flex;
+    margin-bottom: 10px; /* Add some space between input groups */
+}
+.chat-input > div:last-child {
+    margin-bottom: 0; /* No margin for the last group */
+}
+
+.voice-input-container {
+    /* display: flex; */ /* Already handled by the rule above */
+    align-items: center;
+}
+
+.chat-input input[type="text"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 10px;
+    flex-grow: 1; /* Ensure input takes available space */
+}
+
+.chat-input button { /* General style for all buttons in chat-input */
+    background-color: #2957c3;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em; /* Consistent font size */
+}
+
+.chat-input button:hover {
+    background-color: #1f45a0;
+}
+
+/* Specific styling for send buttons in chat-input */
+.chat-input button#send-button,
+.chat-input button#send-voice-button {
+    padding: 10px 15px;
+    font-size: 0.9em;
+}
+
+
+/* Styling for dynamically added input fields within a Sara message */
+.dynamic-input-container {
+    background-color: #e1e1e1; /* Match Sara's message background */
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column; /* Stack inputs and button */
+    align-items: stretch; /* Stretch children to fill width */
+}
+
+.dynamic-input-container input[type="text"],
+.dynamic-input-container input[type="number"],
+.dynamic-input-container input[type="date"] { /* Added date type for future */
+    padding: 8px;
+    margin-bottom: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 0.9em;
+}
+/* Style for multiple inputs in one line, e.g. dates */
+.dynamic-input-container.multi-input input {
+    margin-right: 5px;
+}
+.dynamic-input-container.multi-input input:last-child {
+    margin-right: 0;
+}
+
+
+.dynamic-input-container button.dynamic-input-send-button {
+    background-color: #2957c3; /* Brand color */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9em;
+    align-self: flex-end; /* Align button to the right */
+}
+
+.dynamic-input-container button.dynamic-input-send-button:hover {
+    background-color: #1f45a0; /* Darker brand color */
+}
+
+/* Container for search results */
+.search-results-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column; /* Stack property cards */
+    gap: 10px; /* Space between cards */
+}
+
+/* Styling for the property detail view */
+.property-detail-view {
+    background-color: #f9f9f9; /* Slightly different background */
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.property-detail-view .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.property-detail-view .detail-header h2 {
+    color: #2957c3; /* Brand color for title */
+    margin: 0;
+    font-size: 1.3em;
+}
+
+.property-detail-view .close-detail-view {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: pointer;
+    color: #777;
+}
+.property-detail-view .close-detail-view:hover {
+    color: #333;
+}
+
+.property-detail-view .detail-content img {
+    width: 100%;
+    max-width: 400px; /* Limit image width */
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.property-detail-view .mini-gallery {
+    display: flex;
+    gap: 5px; /* Space between thumbnails */
+    margin-bottom: 10px;
+}
+
+.property-detail-view .mini-gallery img {
+    width: 80px; /* Thumbnail size */
+    height: auto;
+    border-radius: 3px;
+    border: 1px solid #ccc;
+}
+
+.property-detail-view h3 {
+    font-size: 1.1em;
+    color: #333;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+.property-detail-view p {
+    font-size: 0.9em;
+    line-height: 1.5;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.property-detail-view .detail-buttons {
+    margin-top: 15px;
+    text-align: right; /* Align buttons to the right */
+}
+
+.property-detail-view .detail-buttons button {
+    background-color: #2957c3; /* Brand color */
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 10px;
+}
+
+.property-detail-view .detail-buttons button.back-button {
+    background-color: #777; /* Different color for back button */
+}
+.property-detail-view .detail-buttons button.back-button:hover {
+    background-color: #555;
+}
+
+
+.property-detail-view .detail-buttons button:hover {
+    background-color: #1f45a0; /* Darker brand color */
+}
+
+
+/* Class to visually disable the main input area */
+.chat-input.disabled {
+    opacity: 0.5;
+    pointer-events: none; /* Prevent interaction */
+}
+*/
